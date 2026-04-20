@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --green: 40 200 64;
+    --yellow: 254 188 46;
+    --red: 255 95 87;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    --bg: 0 0 0;
+    --surface: 10 10 10;
+    --surface-2: 20 20 20;
+    --surface-3: 30 30 30;
+    --border: 31 31 31;
+    --border-strong: 56 56 56;
+    --text: 255 255 255;
+    --text-2: 200 200 200;
+    --text-3: 140 140 140;
+    --text-4: 95 95 95;
+    --shadow: 0 0 0;
+  }
+
+  html.light {
+    color-scheme: light;
+    --bg: 255 255 255;
+    --surface: 255 255 255;
+    --surface-2: 248 248 248;
+    --surface-3: 240 240 240;
+    --border: 229 229 229;
+    --border-strong: 200 200 200;
+    --text: 0 0 0;
+    --text-2: 70 70 70;
+    --text-3: 120 120 120;
+    --text-4: 160 160 160;
+    --shadow: 0 0 0;
+  }
+
+  * {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg-primary text-text-primary font-sans;
+    min-height: 100dvh;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  ::selection {
+    background: rgb(var(--text) / 0.18);
+    color: inherit;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { @apply bg-border-active rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-text-muted; }
+}
+
+@layer components {
+  .card {
+    @apply bg-bg-card border border-border-subtle rounded-2xl;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+  }
+
+  .card:hover {
+    @apply border-border-active;
+  }
+
+  .stat-value {
+    @apply font-mono text-text-primary tabular-nums tracking-tight;
+  }
+
+  .stat-label {
+    @apply text-[11px] font-medium text-text-tertiary uppercase tracking-[0.12em];
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium;
+  }
+
+  .btn {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm
+           transition-colors duration-150 cursor-pointer select-none;
+  }
+
+  .btn-primary {
+    @apply btn bg-text-primary text-bg-primary hover:bg-text-secondary;
+  }
+
+  .btn-ghost {
+    @apply btn bg-transparent border border-border-subtle text-text-secondary
+           hover:border-border-active hover:text-text-primary hover:bg-bg-card-2;
+  }
+
+  .progress-bar {
+    @apply h-1 rounded-full overflow-hidden bg-bg-card-3;
+  }
+
+  .progress-fill {
+    @apply h-full rounded-full transition-all duration-700 ease-out;
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgb(var(--surface-2)) 25%,
+      rgb(var(--surface-3)) 50%,
+      rgb(var(--surface-2)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite;
+  }
+
+  .ticker-tag {
+    @apply font-mono text-text-primary text-[11px] border border-border-subtle px-2 py-0.5 rounded-md;
+  }
+
+  .section-title {
+    @apply font-display text-[15px] font-medium text-text-primary tracking-tight;
+  }
+
+  .eyebrow {
+    @apply text-[10px] font-medium text-text-tertiary uppercase tracking-[0.14em];
+  }
+
+  .divider {
+    @apply border-t border-border-subtle;
+  }
+}
+
+@layer utilities {
+  .text-green  { color: rgb(var(--green)); }
+  .text-yellow { color: rgb(var(--yellow)); }
+  .text-red    { color: rgb(var(--red)); }
+
+  .bg-green-soft  { background: rgb(var(--green) / 0.1); }
+  .bg-yellow-soft { background: rgb(var(--yellow) / 0.1); }
+  .bg-red-soft    { background: rgb(var(--red) / 0.1); }
+
+  .border-green-soft  { border-color: rgb(var(--green) / 0.3); }
+  .border-yellow-soft { border-color: rgb(var(--yellow) / 0.3); }
+  .border-red-soft    { border-color: rgb(var(--red) / 0.3); }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  .hairline { border-color: rgb(var(--border)); }
+}
+
+/* Recharts overrides */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: rgb(var(--border));
+}
+.recharts-tooltip-wrapper { outline: none; }
