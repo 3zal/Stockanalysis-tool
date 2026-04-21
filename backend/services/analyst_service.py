@@ -61,6 +61,19 @@ class AnalystService:
         target_high = info.get('targetHighPrice') or 0
         target_low = info.get('targetLowPrice') or 0
 
+        # Fallback: t.analyst_price_targets hits a different Yahoo endpoint
+        # less likely to be blocked on cloud IPs
+        if not target_mean and not rec_mean:
+            try:
+                apt = t.analyst_price_targets
+                if apt and isinstance(apt, dict):
+                    target_mean = target_mean or apt.get('mean') or apt.get('current') or 0
+                    target_median = target_median or apt.get('median') or 0
+                    target_high = target_high or apt.get('high') or 0
+                    target_low = target_low or apt.get('low') or 0
+            except Exception:
+                pass
+
         if not num_analysts and not target_mean and not rec_mean:
             return None
 

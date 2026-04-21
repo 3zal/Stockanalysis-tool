@@ -581,12 +581,13 @@ class StockService:
     def _calc_yearly(self, ticker: str) -> list:
         try:
             t = yf.Ticker(ticker)
-            df = t.history(period='max', auto_adjust=True)
+            df = t.history(period='10y', auto_adjust=True)
             if df is None or df.empty:
                 return []
 
             # Normalise index to timezone-naive midnight
-            df.index = pd.to_datetime(df.index).tz_localize(None).normalize()
+            idx = pd.to_datetime(df.index)
+            df.index = idx.tz_convert(None).normalize() if idx.tz is not None else idx.normalize()
 
             today = pd.Timestamp.now().normalize()
 
