@@ -71,14 +71,14 @@ export default function Home() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="mb-14"
+        className="mb-14 text-center"
       >
         <p className="eyebrow mb-4">Research tool for Indian equities</p>
         <h1 className="font-display text-5xl md:text-6xl text-text-primary tracking-tight leading-[1.02] mb-5">
           Evidence-based<br />
           <span className="italic text-text-secondary">stock analysis.</span>
         </h1>
-        <p className="text-base text-text-secondary max-w-xl leading-relaxed">
+        <p className="text-base text-text-secondary max-w-xl mx-auto leading-relaxed">
           A single view on any NSE or BSE listed company — fundamentals, technicals,
           analyst consensus, news sentiment, and a weighted composite score.
         </p>
@@ -89,7 +89,7 @@ export default function Home() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.08 }}
-        className="mb-16"
+        className="mb-16 max-w-2xl mx-auto"
       >
         <SearchBar onSelect={handleSelect} />
       </motion.div>

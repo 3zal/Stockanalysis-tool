@@ -163,6 +163,11 @@ class StockService:
         if yf_quote:
             return yf_quote
 
+        # Fallback: Twelve Data
+        td_quote = self._fetch_quote_twelvedata(ticker, symbol, exchange)
+        if td_quote:
+            return td_quote
+
         # Fallback: NSE India
         try:
             sess = get_session()
@@ -562,7 +567,59 @@ class StockService:
         except Exception:
             return []
 
-    TWELVEDATA_KEY = '3a0890ff4a5b47079d3ccab4a68d47fd'
+    TWELVEDATA_KEY = os.getenv('TWELVEDATA_KEY', '3a0890ff4a5b47079d3ccab4a68d47fd')
+
+    def _fetch_quote_twelvedata(self, ticker: str, symbol: str, exchange: str) -> Optional[dict]:
+        """Fetch quote from Twelve Data API."""
+        try:
+            tw_exchange = 'NSE' if exchange == 'NSE' else 'BSE'
+            resp = requests.get(
+                'https://api.twelvedata.com/quote',
+                params={
+                    'symbol':   symbol,
+                    'exchange': tw_exchange,
+                    'apikey':   self.TWELVEDATA_KEY,
+                },
+                timeout=12,
+            )
+            if resp.status_code != 200:
+                return None
+            data = resp.json()
+            if data.get('status') == 'error':
+                return None
+
+            price = float(data.get('close') or 0)
+            if not price:
+                return None
+            prev = float(data.get('previous_close') or price)
+            change = round(price - prev, 2)
+            change_pct = round(float(data.get('percent_change') or 0), 2)
+
+            fifty_two = data.get('fifty_two_week') or {}
+
+            return {
+                'ticker':       ticker,
+                'name':         str(data.get('name') or symbol),
+                'price':        round(price, 2),
+                'change':       change,
+                'change_pct':   change_pct,
+                'volume':       int(float(data.get('volume') or 0)),
+                'avg_volume':   int(float(data.get('average_volume') or 0)),
+                'market_cap':   0,
+                'week_52_high': float(fifty_two.get('high') or price),
+                'week_52_low':  float(fifty_two.get('low') or price),
+                'day_high':     float(data.get('high') or price),
+                'day_low':      float(data.get('low') or price),
+                'open':         float(data.get('open') or price),
+                'currency':     str(data.get('currency') or 'INR'),
+                'exchange':     exchange,
+                'sector':       '',
+                'industry':     '',
+                'website':      '',
+                'description':  '',
+            }
+        except Exception:
+            return None
 
     def _history_twelvedata(self, symbol: str, days: int) -> list:
         """Fetch daily OHLCV from Twelve Data API."""
