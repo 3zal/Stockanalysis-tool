@@ -144,7 +144,6 @@ export default function Dashboard({ data }: Props) {
         <MarketData quote={quote} fundamentals={fundamentals} technicals={technicals} />
         <NewsAnalysis articles={news} />
         <MarketSentiment score={score} />
-        <AnalystPredictions score={score} currentPrice={quote.price} />
         <AIInsight score={score} fundamentals={fundamentals} companyName={quote.name} />
         {competitors.length > 0 && (
           <div className="md:col-span-2 xl:col-span-3">
