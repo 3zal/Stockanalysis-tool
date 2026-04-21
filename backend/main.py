@@ -187,6 +187,15 @@ async def get_stock_analysis(ticker: str):
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
 
 
+@app.get("/api/stocks/{ticker}/yearly-performance")
+async def get_yearly_performance(ticker: str):
+    ticker = ticker.upper().strip()
+    suffix = ticker[-3:] if ticker.endswith((".NS", ".BO")) else ".NS"
+    ticker = _resolve_alias(ticker) + suffix
+    data = await stock_svc.get_yearly_performance(ticker)
+    return {"yearly_performance": data}
+
+
 @app.get("/api/stocks/{ticker}/history")
 async def get_stock_history(ticker: str, period: str = "6mo"):
     ticker = ticker.upper()

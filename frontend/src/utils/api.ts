@@ -1,5 +1,5 @@
 import axios from 'axios'
-import type { StockAnalysis, SearchResult, WatchlistItem, MarketIndex, HistoryPoint } from '@/types'
+import type { StockAnalysis, SearchResult, WatchlistItem, MarketIndex, HistoryPoint, YearlyPoint } from '@/types'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ?? '/api',
@@ -19,6 +19,11 @@ export const getStockAnalysis = async (ticker: string): Promise<StockAnalysis> =
 export const getStockHistory = async (ticker: string, period: string): Promise<HistoryPoint[]> => {
   const { data } = await api.get(`/stocks/${ticker}/history`, { params: { period } })
   return data.history
+}
+
+export const getYearlyPerformance = async (ticker: string): Promise<YearlyPoint[]> => {
+  const { data } = await api.get(`/stocks/${ticker}/yearly-performance`)
+  return data.yearly_performance
 }
 
 export const getMarketOverview = async (): Promise<MarketIndex[]> => {

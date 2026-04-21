@@ -190,6 +190,15 @@ export interface StockAnalysis {
   in_watchlist: boolean
 }
 
+export interface YearlyPoint {
+  fy: string
+  fy_year: number
+  return_pct: number
+  start_price: number
+  end_price: number
+  is_partial: boolean
+}
+
 export interface SearchResult {
   symbol: string
   ticker: string

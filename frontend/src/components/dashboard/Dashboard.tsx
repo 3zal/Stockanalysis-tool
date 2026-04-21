@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Bookmark, BookmarkCheck, Share2, ArrowUp, ArrowDown } from 'lucide-react'
 import type { StockAnalysis } from '@/types'
@@ -15,6 +15,9 @@ import AIInsight from '@/components/sections/AIInsight'
 import AnalystPredictions from '@/components/sections/AnalystPredictions'
 import MacroOutlook from '@/components/sections/MacroOutlook'
 import CompetitorComparison from '@/components/sections/CompetitorComparison'
+import YearlyPerformance from '@/components/sections/YearlyPerformance'
+import { getYearlyPerformance } from '@/utils/api'
+import type { YearlyPoint } from '@/types'
 import clsx from 'clsx'
 
 interface Props {
@@ -27,6 +30,17 @@ export default function Dashboard({ data }: Props) {
   const { add, remove, isInWatchlist } = useWatchlistStore()
   const { showToast } = useUIStore()
   const [watchlistLoading, setWatchlistLoading] = useState(false)
+  const [yearlyData, setYearlyData] = useState<YearlyPoint[]>([])
+  const [yearlyLoading, setYearlyLoading] = useState(true)
+
+  useEffect(() => {
+    const ticker = data.ticker.replace('.NS', '').replace('.BO', '')
+    setYearlyLoading(true)
+    getYearlyPerformance(ticker)
+      .then(setYearlyData)
+      .catch(() => setYearlyData([]))
+      .finally(() => setYearlyLoading(false))
+  }, [data.ticker])
 
   const inWatchlist = isInWatchlist(data.ticker) || data.in_watchlist
   const positive = quote.change_pct >= 0
@@ -140,6 +154,8 @@ export default function Dashboard({ data }: Props) {
         onPeriodChange={handlePeriodChange}
         currentPrice={quote.price}
       />
+
+      <YearlyPerformance data={yearlyData} loading={yearlyLoading} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
         <MarketData quote={quote} fundamentals={fundamentals} technicals={technicals} />

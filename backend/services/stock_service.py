@@ -567,6 +567,65 @@ class StockService:
         except Exception:
             return []
 
+    # ── Yearly Performance ─────────────────────────────────────────────────────
+
+    async def get_yearly_performance(self, ticker: str) -> list:
+        ck = f"yearly_{ticker}"
+        if ck in _history_cache:
+            return _history_cache[ck]
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(self.executor, self._calc_yearly, ticker)
+        _history_cache[ck] = result
+        return result
+
+    def _calc_yearly(self, ticker: str) -> list:
+        try:
+            t = yf.Ticker(ticker)
+            df = t.history(period='max', auto_adjust=True)
+            if df is None or df.empty:
+                return []
+
+            # Normalise index to timezone-naive midnight
+            df.index = pd.to_datetime(df.index).tz_localize(None).normalize()
+
+            today = pd.Timestamp.now().normalize()
+
+            # Indian FY: April 1 → March 31; FY year = year of March 31
+            # e.g. FY2025 = Apr 1 2024 – Mar 31 2025
+            current_fy = today.year + 1 if today.month >= 4 else today.year
+
+            results = []
+            for fy in range(current_fy - 10, current_fy + 1):
+                fy_start = pd.Timestamp(fy - 1, 4, 1)
+                fy_end_natural = pd.Timestamp(fy, 3, 31)
+                is_partial = fy_end_natural > today
+                fy_end = today if is_partial else fy_end_natural
+
+                mask = (df.index >= fy_start) & (df.index <= fy_end)
+                period_df = df.loc[mask]
+
+                if len(period_df) < 5:
+                    continue
+
+                start_price = float(period_df['Close'].iloc[0])
+                end_price   = float(period_df['Close'].iloc[-1])
+                if start_price <= 0:
+                    continue
+
+                return_pct = round((end_price - start_price) / start_price * 100, 1)
+                results.append({
+                    'fy':          f'FY{fy}' + (' YTD' if is_partial else ''),
+                    'fy_year':     fy,
+                    'return_pct':  return_pct,
+                    'start_price': round(start_price, 2),
+                    'end_price':   round(end_price, 2),
+                    'is_partial':  is_partial,
+                })
+
+            return results
+        except Exception:
+            return []
+
     TWELVEDATA_KEY = os.getenv('TWELVEDATA_KEY', '3a0890ff4a5b47079d3ccab4a68d47fd')
 
     def _fetch_quote_twelvedata(self, ticker: str, symbol: str, exchange: str) -> Optional[dict]:

@@ -5,6 +5,7 @@ import { Bookmark, Search, X } from 'lucide-react'
 import { useUIStore } from '@/store/useUIStore'
 import { useWatchlistStore } from '@/store/useWatchlistStore'
 import SearchBar from '@/components/search/SearchBar'
+import ThemeToggle from '@/components/layout/ThemeToggle'
 import { getMarketOverview } from '@/utils/api'
 import type { MarketIndex } from '@/types'
 import { formatPercent } from '@/utils/formatters'
@@ -69,6 +70,8 @@ export default function Header() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle />
+
           <button
             className="md:hidden h-8 w-8 rounded-full border border-border-subtle flex items-center justify-center text-text-secondary hover:text-text-primary hover:border-border-active transition-colors"
             onClick={() => setShowSearch(!showSearch)}

@@ -28,17 +28,17 @@
 
   html.light {
     color-scheme: light;
-    --bg: 255 255 255;
+    --bg: 245 245 248;
     --surface: 255 255 255;
-    --surface-2: 248 248 248;
-    --surface-3: 240 240 240;
-    --border: 229 229 229;
-    --border-strong: 200 200 200;
-    --text: 0 0 0;
-    --text-2: 70 70 70;
-    --text-3: 120 120 120;
-    --text-4: 160 160 160;
-    --shadow: 0 0 0;
+    --surface-2: 249 249 252;
+    --surface-3: 240 240 245;
+    --border: 222 222 230;
+    --border-strong: 190 190 205;
+    --text: 12 12 18;
+    --text-2: 55 55 75;
+    --text-3: 108 108 128;
+    --text-4: 155 155 175;
+    --shadow: 25 25 50;
   }
 
   * {
@@ -157,6 +157,11 @@
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
   .hairline { border-color: rgb(var(--border)); }
+}
+
+/* Light mode depth */
+html.light .card {
+  box-shadow: 0 1px 3px rgb(var(--shadow) / 0.06), 0 2px 8px rgb(var(--shadow) / 0.04);
 }
 
 /* Recharts overrides */
