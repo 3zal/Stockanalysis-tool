@@ -23,7 +23,7 @@ export default function MainLayout() {
 
       <footer className="border-t border-border-subtle">
         <div className="max-w-[1320px] mx-auto px-4 md:px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-[11px] text-text-tertiary">
-          <span className="font-mono uppercase tracking-[0.14em]">StockLens · Research Tool</span>
+          <span className="font-mono uppercase tracking-[0.14em]">investr.info · Research Tool</span>
           <span>Data sourced from NSE India &amp; Twelve Data. Not financial advice.</span>
         </div>
       </footer>

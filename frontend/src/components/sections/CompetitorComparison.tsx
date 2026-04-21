@@ -31,7 +31,7 @@ export default function CompetitorComparison({ competitors, currentTicker, quote
   const subject = cleanTicker(currentTicker)
 
   const allRows = [
-    { ticker: subject, name: quote.name, price: quote.price, change_pct: quote.change_pct, market_cap: quote.market_cap, pe_ratio: null, price_to_book: null, roe: null, profit_margin: null, revenue_growth: null, beta: null } as Competitor & { isSubject: boolean },
+    { ticker: subject, name: quote.name, price: quote.price, change_pct: quote.change_pct, market_cap: quote.market_cap, pe_ratio: null, price_to_book: null, roe: null, profit_margin: null, revenue_growth: null, beta: null, isSubject: true } as unknown as Competitor & { isSubject: boolean },
     ...competitors.map(c => ({ ...c, isSubject: false })),
   ]
 

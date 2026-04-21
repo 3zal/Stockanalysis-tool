@@ -56,9 +56,10 @@ export default function Header() {
 
       {/* Main header */}
       <div className="flex items-center gap-4 px-4 md:px-6 lg:px-8 h-14">
-        <Link to="/" className="flex items-baseline gap-1.5 shrink-0">
-          <span className="font-display text-xl tracking-tight text-text-primary">StockLens</span>
-          <span className="hidden sm:inline text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
+        <Link to="/" className="flex items-baseline gap-1 shrink-0">
+          <span className="font-display text-xl tracking-tight text-text-primary italic">investr</span>
+          <span className="font-display text-xl tracking-tight text-text-tertiary">.info</span>
+          <span className="hidden sm:inline ml-2 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
             NSE · BSE
           </span>
         </Link>

@@ -6,6 +6,7 @@ from typing import Any, Optional
 import asyncio
 import json
 import math
+import os
 
 from database import Database
 from services.stock_service import StockService
@@ -37,14 +38,21 @@ class SafeJSONResponse(JSONResponse):
 
 
 app = FastAPI(
-    title="NSE/BSE Stock Analyzer API",
+    title="investr.info API",
     version="1.0.0",
     default_response_class=SafeJSONResponse,
 )
 
+_default_origins = [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
+_env_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173"],
+    allow_origins=_default_origins + _env_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -62,9 +70,14 @@ async def startup():
     db.init_db()
 
 
+@app.get("/health")
+async def root_health():
+    return {"status": "ok"}
+
+
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "NSE/BSE Stock Analyzer"}
+    return {"status": "ok", "service": "investr.info"}
 
 
 @app.get("/api/stocks/search")

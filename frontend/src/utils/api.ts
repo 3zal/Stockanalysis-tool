@@ -2,7 +2,7 @@ import axios from 'axios'
 import type { StockAnalysis, SearchResult, WatchlistItem, MarketIndex, HistoryPoint } from '@/types'
 
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL ?? '/api',
   timeout: 30000,
 })
 
