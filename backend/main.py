@@ -86,12 +86,12 @@ async def startup():
 
 @app.get("/health")
 async def root_health():
-    return {"status": "ok"}
+    return {"status": "ok", "build": "yearly-v2"}
 
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "service": "investr.info"}
+    return {"status": "ok", "service": "investr.info", "build": "yearly-v2"}
 
 
 @app.get("/api/stocks/search")

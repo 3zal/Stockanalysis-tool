@@ -6,7 +6,10 @@ import os
 import asyncio
 import time
 import io
+import logging
 import yfinance as yf
+
+logger = logging.getLogger(__name__)
 from concurrent.futures import ThreadPoolExecutor
 from cachetools import TTLCache
 from typing import Optional
@@ -581,13 +584,17 @@ class StockService:
     def _calc_yearly(self, ticker: str) -> list:
         try:
             t = yf.Ticker(ticker)
-            df = t.history(period='10y', auto_adjust=True)
+            # auto_adjust=False matches the working /history endpoint
+            df = t.history(period='10y', auto_adjust=False)
             if df is None or df.empty:
+                logger.warning(f"yearly: empty history for {ticker}")
                 return []
 
-            # Normalise index to timezone-naive midnight
-            idx = pd.to_datetime(df.index)
-            df.index = idx.tz_convert(None).normalize() if idx.tz is not None else idx.normalize()
+            # Strip timezone if present, normalise to midnight
+            idx = df.index
+            if getattr(idx, 'tz', None) is not None:
+                idx = idx.tz_convert(None)
+            df.index = idx.normalize()
 
             today = pd.Timestamp.now().normalize()
 
@@ -623,8 +630,10 @@ class StockService:
                     'is_partial':  is_partial,
                 })
 
+            logger.info(f"yearly: {ticker} returned {len(results)} FYs")
             return results
-        except Exception:
+        except Exception as e:
+            logger.exception(f"yearly: {ticker} failed: {e}")
             return []
 
     TWELVEDATA_KEY = os.getenv('TWELVEDATA_KEY', '3a0890ff4a5b47079d3ccab4a68d47fd')
