@@ -1,6 +1,7 @@
 import sqlite3
 import os
-from datetime import datetime
+import json
+from datetime import datetime, timedelta
 
 DB_PATH = os.path.join(os.path.dirname(__file__), 'stock_analyzer.db')
 
@@ -32,6 +33,50 @@ class Database:
             )
         """)
 
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS cached_data (
+                cache_key TEXT PRIMARY KEY,
+                data_type TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                fetched_at TEXT NOT NULL
+            )
+        """)
+
+        conn.commit()
+        conn.close()
+
+    def get_cached(self, cache_key: str, max_age_hours: int = 72):
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT payload, fetched_at FROM cached_data WHERE cache_key = ?",
+            (cache_key,)
+        )
+        row = cursor.fetchone()
+        conn.close()
+        if not row:
+            return None
+        try:
+            fetched_at = datetime.fromisoformat(row['fetched_at'])
+        except Exception:
+            return None
+        age = datetime.utcnow() - fetched_at
+        if age > timedelta(hours=max_age_hours):
+            return None
+        try:
+            payload = json.loads(row['payload'])
+        except Exception:
+            return None
+        return {'payload': payload, 'fetched_at': row['fetched_at'], 'age_hours': age.total_seconds() / 3600}
+
+    def set_cached(self, cache_key: str, data_type: str, payload: dict):
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT OR REPLACE INTO cached_data (cache_key, data_type, payload, fetched_at) VALUES (?, ?, ?, ?)",
+            (cache_key, data_type, json.dumps(payload), datetime.utcnow().isoformat())
+        )
         conn.commit()
         conn.close()
 

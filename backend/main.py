@@ -13,6 +13,8 @@ from services.stock_service import StockService
 from services.news_service import NewsService
 from services.scoring_service import ScoringService
 from services.competitor_service import CompetitorService
+from services.analyst_service import AnalystService
+from services.macro_service import MacroService
 
 
 def _sanitize(value: Any) -> Any:
@@ -63,6 +65,8 @@ stock_svc = StockService()
 news_svc = NewsService()
 scoring_svc = ScoringService()
 competitor_svc = CompetitorService()
+analyst_svc = AnalystService()
+macro_svc = MacroService()
 
 
 @app.on_event("startup")
@@ -108,11 +112,13 @@ async def get_stock_analysis(ticker: str):
                 raise HTTPException(status_code=404, detail=f"Stock '{ticker}' not found. Try adding .NS or .BO suffix.")
 
         # Fetch all data in parallel
-        fundamentals, technicals, history, news = await asyncio.gather(
+        fundamentals, technicals, history, news, analyst, macro = await asyncio.gather(
             stock_svc.get_fundamentals(ticker),
             stock_svc.get_technicals(ticker),
             stock_svc.get_history(ticker),
             news_svc.get_news(quote.get("name", ticker), ticker, quote.get("sector", "")),
+            analyst_svc.get_analyst_data(ticker, quote.get("price", 0)),
+            macro_svc.get_macro_data(),
             return_exceptions=True,
         )
 
@@ -125,6 +131,10 @@ async def get_stock_analysis(ticker: str):
             history = []
         if isinstance(news, Exception):
             news = []
+        if isinstance(analyst, Exception):
+            analyst = None
+        if isinstance(macro, Exception):
+            macro = None
 
         # Calculate score
         score_data = scoring_svc.calculate_score(
@@ -132,6 +142,8 @@ async def get_stock_analysis(ticker: str):
             fundamentals=fundamentals,
             technicals=technicals,
             news=news,
+            analyst=analyst,
+            macro=macro,
         )
 
         # Get competitors (non-blocking)

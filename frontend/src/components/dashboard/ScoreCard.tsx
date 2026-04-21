@@ -40,12 +40,15 @@ export default function ScoreCard({ score }: Props) {
   const tone = scoreTone(score.total)
   const recTone = score.rec_color === 'green' ? 'text-green' : score.rec_color === 'red' ? 'text-red' : 'text-yellow'
 
-  const components = [
+  const allComponents = [
     { key: 'fundamentals', label: 'Fundamentals' },
     { key: 'technicals', label: 'Technicals' },
     { key: 'news_sentiment', label: 'News sentiment' },
     { key: 'market_sentiment', label: 'Market sentiment' },
+    { key: 'analyst', label: 'Analyst ratings' },
+    { key: 'macro', label: 'India macro' },
   ] as const
+  const components = allComponents.filter(c => !!score.components[c.key])
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-12 gap-x-10 gap-y-8">
@@ -82,7 +85,7 @@ export default function ScoreCard({ score }: Props) {
         <p className="eyebrow mb-2">Breakdown</p>
         <div className="border-t border-border-subtle">
           {components.map((c, i) => {
-            const comp = score.components[c.key]
+            const comp = score.components[c.key]!
             return (
               <ComponentBar
                 key={c.key}

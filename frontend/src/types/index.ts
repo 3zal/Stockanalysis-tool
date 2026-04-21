@@ -106,10 +106,37 @@ export interface AnalystData {
   hold_pct: number
   sell_pct: number
   consensus: string
+  recommendation_mean: number
   target_price: number
+  target_median: number
   upside_pct: number
   high_target: number
   low_target: number
+  _cache_age_hours?: number
+  _from_cache?: boolean
+}
+
+export interface MacroSignal {
+  label: string
+  value: string
+  signal: 'positive' | 'neutral' | 'negative'
+  year?: string | null
+  source: string
+}
+
+export interface MacroData {
+  score: number
+  signals: MacroSignal[]
+  gdp_growth?: number | null
+  gdp_year?: string | null
+  cpi?: number | null
+  cpi_year?: string | null
+  nifty_change_pct?: number | null
+  nifty_vs_ma200?: number | null
+  vix?: number | null
+  _cache_age_hours?: number
+  _from_cache?: boolean
+  _stale?: boolean
 }
 
 export interface ScoreData {
@@ -123,6 +150,8 @@ export interface ScoreData {
     technicals: ScoreComponent
     news_sentiment: ScoreComponent
     market_sentiment: ScoreComponent
+    analyst?: ScoreComponent & { details: AnalystData }
+    macro?: ScoreComponent & { details: MacroData }
   }
 }
 

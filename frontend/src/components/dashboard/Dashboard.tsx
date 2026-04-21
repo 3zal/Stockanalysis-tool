@@ -12,6 +12,8 @@ import MarketData from '@/components/sections/MarketData'
 import NewsAnalysis from '@/components/sections/NewsAnalysis'
 import MarketSentiment from '@/components/sections/MarketSentiment'
 import AIInsight from '@/components/sections/AIInsight'
+import AnalystPredictions from '@/components/sections/AnalystPredictions'
+import MacroOutlook from '@/components/sections/MacroOutlook'
 import CompetitorComparison from '@/components/sections/CompetitorComparison'
 import clsx from 'clsx'
 
@@ -144,6 +146,10 @@ export default function Dashboard({ data }: Props) {
         <NewsAnalysis articles={news} />
         <MarketSentiment score={score} />
         <AIInsight score={score} fundamentals={fundamentals} companyName={quote.name} />
+        {score.components.macro && <MacroOutlook macro={score.components.macro.details} />}
+        {score.components.analyst && (
+          <AnalystPredictions analyst={score.components.analyst.details} currentPrice={quote.price} />
+        )}
         {competitors.length > 0 && (
           <div className="md:col-span-2 xl:col-span-3">
             <CompetitorComparison competitors={competitors} currentTicker={data.ticker} quote={quote} />

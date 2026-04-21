@@ -58,6 +58,7 @@ function Signal({ label, value, tone }: { label: string; value: string; tone: 'p
 export default function MarketSentiment({ score }: Props) {
   const sentiment = score.components.market_sentiment
   const news = score.components.news_sentiment
+  const analyst = score.components.analyst
 
   const gaugeScore = (sentiment.score / 100) * 2 - 1
   const newsGaugeScore = (news.score / 100) * 2 - 1
@@ -68,6 +69,21 @@ export default function MarketSentiment({ score }: Props) {
   const signals: { label: string; value: string; tone: 'pos' | 'neg' | 'neutral' }[] = []
   signals.push({ label: 'Market mood', value: sentimentLabel(sentiment.score), tone: sentiment.score >= 55 ? 'pos' : sentiment.score <= 40 ? 'neg' : 'neutral' })
   signals.push({ label: 'News flow', value: sentimentLabel(news.score), tone: news.score >= 55 ? 'pos' : news.score <= 40 ? 'neg' : 'neutral' })
+  if (analyst) {
+    const d = analyst.details
+    signals.push({
+      label: 'Analyst consensus',
+      value: `${d.consensus} · ${d.num_analysts} analysts`,
+      tone: analyst.score >= 55 ? 'pos' : analyst.score <= 40 ? 'neg' : 'neutral',
+    })
+    if (d.upside_pct !== 0) {
+      signals.push({
+        label: 'Price upside',
+        value: `${d.upside_pct >= 0 ? '+' : ''}${d.upside_pct.toFixed(1)}%`,
+        tone: d.upside_pct > 5 ? 'pos' : d.upside_pct < -5 ? 'neg' : 'neutral',
+      })
+    }
+  }
 
   return (
     <motion.div

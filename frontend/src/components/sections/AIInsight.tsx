@@ -26,6 +26,7 @@ function buildPoints(score: ScoreData, fundamentals: Fundamentals) {
   const f = score.components.fundamentals.score
   const t = score.components.technicals.score
   const n = score.components.news_sentiment.score
+  const analyst = score.components.analyst
 
   if (f >= 65) points.push({ text: 'Strong fundamentals. Balance sheet and earnings quality support the current valuation.', type: 'positive' })
   else if (f < 40) points.push({ text: 'Weak fundamental indicators. Watch earnings momentum and debt levels.', type: 'negative' })
@@ -38,8 +39,17 @@ function buildPoints(score: ScoreData, fundamentals: Fundamentals) {
   if (n >= 65) points.push({ text: 'Positive news flow with constructive press coverage and corporate disclosures.', type: 'positive' })
   else if (n < 40) points.push({ text: 'Negative news sentiment could create near-term headwinds.', type: 'negative' })
 
-  if (fundamentals.revenue_growth != null && fundamentals.revenue_growth > 0.15) {
-    points.push({ text: `Revenue growth of ${(fundamentals.revenue_growth * 100).toFixed(1)}% signals business momentum.`, type: 'positive' })
+  if (analyst) {
+    const d = analyst.details
+    if (analyst.score >= 65) {
+      points.push({ text: `${d.consensus} consensus from ${d.num_analysts} analysts with ${d.upside_pct >= 0 ? '+' : ''}${d.upside_pct.toFixed(1)}% target upside.`, type: 'positive' })
+    } else if (analyst.score < 40) {
+      points.push({ text: `Cautious analyst view (${d.consensus}) with limited target upside.`, type: 'negative' })
+    }
+  }
+
+  if (fundamentals.revenue_growth != null && fundamentals.revenue_growth > 15) {
+    points.push({ text: `Revenue growth of ${fundamentals.revenue_growth.toFixed(1)}% signals business momentum.`, type: 'positive' })
   }
 
   return points.slice(0, 4)
