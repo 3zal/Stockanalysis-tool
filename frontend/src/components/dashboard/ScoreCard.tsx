@@ -44,9 +44,7 @@ export default function ScoreCard({ score }: Props) {
     { key: 'fundamentals', label: 'Fundamentals' },
     { key: 'technicals', label: 'Technicals' },
     { key: 'news_sentiment', label: 'News sentiment' },
-    { key: 'analyst', label: 'Analyst ratings' },
     { key: 'market_sentiment', label: 'Market sentiment' },
-    { key: 'macro', label: 'Macro outlook' },
   ] as const
 
   return (

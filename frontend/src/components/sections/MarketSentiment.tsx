@@ -58,8 +58,6 @@ function Signal({ label, value, tone }: { label: string; value: string; tone: 'p
 export default function MarketSentiment({ score }: Props) {
   const sentiment = score.components.market_sentiment
   const news = score.components.news_sentiment
-  const analyst = score.components.analyst
-  const analystDetails = analyst?.details
 
   const gaugeScore = (sentiment.score / 100) * 2 - 1
   const newsGaugeScore = (news.score / 100) * 2 - 1
@@ -68,26 +66,8 @@ export default function MarketSentiment({ score }: Props) {
   const overallTone = toneFor(overall)
 
   const signals: { label: string; value: string; tone: 'pos' | 'neg' | 'neutral' }[] = []
-  if (analystDetails) {
-    const buyPct = analystDetails.buy_pct ?? 0
-    signals.push({
-      label: 'Analyst consensus',
-      value: analystDetails.consensus || 'N/A',
-      tone: buyPct >= 60 ? 'pos' : buyPct <= 30 ? 'neg' : 'neutral',
-    })
-    if (analystDetails.upside_pct !== undefined) {
-      signals.push({
-        label: 'Price upside',
-        value: `${analystDetails.upside_pct >= 0 ? '+' : ''}${analystDetails.upside_pct.toFixed(1)}%`,
-        tone: analystDetails.upside_pct >= 5 ? 'pos' : analystDetails.upside_pct <= -5 ? 'neg' : 'neutral',
-      })
-    }
-  }
   signals.push({ label: 'Market mood', value: sentimentLabel(sentiment.score), tone: sentiment.score >= 55 ? 'pos' : sentiment.score <= 40 ? 'neg' : 'neutral' })
   signals.push({ label: 'News flow', value: sentimentLabel(news.score), tone: news.score >= 55 ? 'pos' : news.score <= 40 ? 'neg' : 'neutral' })
-  if (score.components.macro) {
-    signals.push({ label: 'Macro outlook', value: sentimentLabel(score.components.macro.score), tone: score.components.macro.score >= 55 ? 'pos' : score.components.macro.score <= 40 ? 'neg' : 'neutral' })
-  }
 
   return (
     <motion.div
@@ -120,7 +100,6 @@ export default function MarketSentiment({ score }: Props) {
         <div className="border-t border-border-subtle">
           <Meter label="Market sentiment" value={sentiment.score} />
           <Meter label="News sentiment" value={news.score} />
-          {score.components.macro && <Meter label="Macro outlook" value={score.components.macro.score} />}
         </div>
       </div>
 

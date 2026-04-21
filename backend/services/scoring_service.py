@@ -6,46 +6,33 @@ from typing import Optional
 class ScoringService:
     """
     Weighted investment scoring system (0-100):
-      Fundamentals     30%
-      Technicals       20%
-      News Sentiment   15%
-      Analyst Ratings  15%
-      Market Sentiment 10%
-      Macro/Economy    10%
+      Fundamentals     40%
+      Technicals       25%
+      News Sentiment   20%
+      Market Sentiment 15%
     """
 
     def calculate_score(self, quote: dict, fundamentals: dict, technicals: dict, news: list) -> dict:
-        # Calculate component scores
         fund_score = self._score_fundamentals(fundamentals, quote)
         tech_score = self._score_technicals(technicals)
         news_score = self._score_news_sentiment(news)
-        analyst_data = self._generate_analyst_consensus(quote, fundamentals)
-        analyst_score = analyst_data['score']
         market_score = self._score_market_sentiment(quote, technicals)
-        macro_score = self._score_macro()
 
-        # Weights
         weights = {
-            'fundamentals': 0.30,
-            'technicals': 0.20,
-            'news_sentiment': 0.15,
-            'analyst': 0.15,
-            'market_sentiment': 0.10,
-            'macro': 0.10,
+            'fundamentals': 0.40,
+            'technicals': 0.25,
+            'news_sentiment': 0.20,
+            'market_sentiment': 0.15,
         }
 
-        # Weighted total
         total = (
             fund_score * weights['fundamentals'] +
             tech_score * weights['technicals'] +
             news_score * weights['news_sentiment'] +
-            analyst_score * weights['analyst'] +
-            market_score * weights['market_sentiment'] +
-            macro_score * weights['macro']
+            market_score * weights['market_sentiment']
         )
         total = round(min(max(total, 1), 99), 1)
 
-        # Recommendation
         if total >= 61:
             recommendation = 'BUY'
             rec_color = 'green'
@@ -56,8 +43,7 @@ class ScoringService:
             recommendation = 'SELL'
             rec_color = 'red'
 
-        # Confidence: how many components agree
-        scores = [fund_score, tech_score, news_score, analyst_score, market_score, macro_score]
+        scores = [fund_score, tech_score, news_score, market_score]
         if recommendation == 'BUY':
             agreeing = sum(1 for s in scores if s >= 55)
         elif recommendation == 'SELL':
@@ -65,12 +51,11 @@ class ScoringService:
         else:
             agreeing = sum(1 for s in scores if 35 <= s <= 65)
 
-        confidence = round(40 + (agreeing / 6) * 55)
+        confidence = round(40 + (agreeing / 4) * 55)
 
-        # AI reasoning summary
         reasoning = self._generate_reasoning(
-            total, fund_score, tech_score, news_score, analyst_score,
-            market_score, macro_score, fundamentals, technicals, news, quote
+            total, fund_score, tech_score, news_score,
+            market_score, fundamentals, technicals, news, quote
         )
 
         return {
@@ -98,23 +83,11 @@ class ScoringService:
                     'label': 'News Sentiment',
                     'details': self._news_details(news),
                 },
-                'analyst': {
-                    'score': round(analyst_score, 1),
-                    'weight': weights['analyst'],
-                    'label': 'Analyst Ratings',
-                    'details': analyst_data,
-                },
                 'market_sentiment': {
                     'score': round(market_score, 1),
                     'weight': weights['market_sentiment'],
                     'label': 'Market Sentiment',
                     'details': self._market_sentiment_details(quote, technicals),
-                },
-                'macro': {
-                    'score': round(macro_score, 1),
-                    'weight': weights['macro'],
-                    'label': 'Macro & Economy',
-                    'details': self._macro_details(),
                 },
             },
         }
@@ -415,7 +388,7 @@ class ScoringService:
         # - Strong FII inflows (positive)
         return 62.0
 
-    def _generate_reasoning(self, total, fund, tech, news, analyst, mkt, macro,
+    def _generate_reasoning(self, total, fund, tech, news, mkt,
                             fundamentals, technicals, news_list, quote) -> str:
         parts = []
         name = quote.get('name', 'This stock')
@@ -450,14 +423,13 @@ class ScoringService:
             else:
                 parts.append("mixed news sentiment")
 
-        # Construct recommendation summary
         rec = 'Buy' if total >= 61 else 'Hold' if total >= 31 else 'Sell'
-        confidence = round(40 + (sum(1 for s in [fund, tech, news, analyst, mkt, macro] if (s >= 55 if total >= 61 else s <= 45 if total < 31 else 35 <= s <= 65)) / 6) * 55)
+        confidence = round(40 + (sum(1 for s in [fund, tech, news, mkt] if (s >= 55 if total >= 61 else s <= 45 if total < 31 else 35 <= s <= 65)) / 4) * 55)
 
         summary = f"{name} scores {total:.0f}/100, a {rec} signal. The analysis shows {', '.join(parts[:2])}"
         if len(parts) > 2:
             summary += f", along with {parts[2]}"
-        summary += f". Analyst consensus aligns with a {rec} rating at {confidence}% confidence."
+        summary += f". Overall signal: {rec} at {confidence}% confidence."
 
         return summary
 

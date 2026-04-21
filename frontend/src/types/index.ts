@@ -122,9 +122,7 @@ export interface ScoreData {
     fundamentals: ScoreComponent
     technicals: ScoreComponent
     news_sentiment: ScoreComponent
-    analyst: ScoreComponent & { details: AnalystData }
     market_sentiment: ScoreComponent
-    macro: ScoreComponent
   }
 }
 

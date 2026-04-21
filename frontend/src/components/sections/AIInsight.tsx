@@ -26,7 +26,6 @@ function buildPoints(score: ScoreData, fundamentals: Fundamentals) {
   const f = score.components.fundamentals.score
   const t = score.components.technicals.score
   const n = score.components.news_sentiment.score
-  const a = score.components.analyst.score
 
   if (f >= 65) points.push({ text: 'Strong fundamentals. Balance sheet and earnings quality support the current valuation.', type: 'positive' })
   else if (f < 40) points.push({ text: 'Weak fundamental indicators. Watch earnings momentum and debt levels.', type: 'negative' })
@@ -36,11 +35,8 @@ function buildPoints(score: ScoreData, fundamentals: Fundamentals) {
   else if (t < 40) points.push({ text: 'Technicals point to near-term weakness. Wait for a confirmed reversal.', type: 'negative' })
   else points.push({ text: 'Technical picture is mixed. No clear directional conviction from the tape.', type: 'neutral' })
 
-  if (n >= 65) points.push({ text: 'Positive news flow with constructive analyst commentary and press coverage.', type: 'positive' })
+  if (n >= 65) points.push({ text: 'Positive news flow with constructive press coverage and corporate disclosures.', type: 'positive' })
   else if (n < 40) points.push({ text: 'Negative news sentiment could create near-term headwinds.', type: 'negative' })
-
-  if (a >= 65) points.push({ text: 'Sell-side is bullish with meaningful upside to consensus price target.', type: 'positive' })
-  else if (a < 40) points.push({ text: 'Sell-side is cautious. Limited upside versus current valuation.', type: 'negative' })
 
   if (fundamentals.revenue_growth != null && fundamentals.revenue_growth > 0.15) {
     points.push({ text: `Revenue growth of ${(fundamentals.revenue_growth * 100).toFixed(1)}% signals business momentum.`, type: 'positive' })
@@ -50,12 +46,7 @@ function buildPoints(score: ScoreData, fundamentals: Fundamentals) {
 }
 
 export default function AIInsight({ score, fundamentals }: Props) {
-  const macroScore = score.components.macro.score
   const points = buildPoints(score, fundamentals)
-  const macroTone =
-    macroScore >= 55 ? 'text-green' :
-    macroScore < 40 ? 'text-red' :
-    'text-yellow'
 
   return (
     <motion.div
@@ -86,19 +77,6 @@ export default function AIInsight({ score, fundamentals }: Props) {
             </motion.div>
           ))}
         </div>
-      </div>
-
-      <div className="pt-4 border-t border-border-subtle">
-        <div className="flex items-baseline justify-between">
-          <p className="eyebrow">India macro</p>
-          <span className={clsx('text-[13px] font-mono tabular-nums', macroTone)}>
-            {macroScore.toFixed(0)} / 100
-          </span>
-        </div>
-        <p className="text-[11px] text-text-tertiary mt-1.5 leading-relaxed">
-          Composite of GDP growth, RBI stance, FII flows, and sector tailwinds.
-          Simulated indicator based on current economic data, not financial advice.
-        </p>
       </div>
     </motion.div>
   )
