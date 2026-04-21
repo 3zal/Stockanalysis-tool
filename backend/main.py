@@ -17,6 +17,16 @@ from services.analyst_service import AnalystService
 from services.macro_service import MacroService
 
 
+TICKER_ALIASES = {
+    "TATAMOTORS": "TMPV",
+}
+
+
+def _resolve_alias(ticker: str) -> str:
+    base = ticker.replace(".NS", "").replace(".BO", "")
+    return TICKER_ALIASES.get(base, base)
+
+
 def _sanitize(value: Any) -> Any:
     if isinstance(value, float):
         if math.isnan(value) or math.isinf(value):
@@ -95,9 +105,8 @@ async def search_stocks(q: str = Query(..., min_length=1)):
 async def get_stock_analysis(ticker: str):
     """Get comprehensive stock analysis"""
     ticker = ticker.upper().strip()
-    # Default to NSE if no exchange suffix
-    if not ticker.endswith(".NS") and not ticker.endswith(".BO"):
-        ticker = f"{ticker}.NS"
+    suffix = ticker[-3:] if ticker.endswith((".NS", ".BO")) else ".NS"
+    ticker = _resolve_alias(ticker) + suffix
 
     try:
         # Fetch quote first to validate ticker
@@ -181,8 +190,8 @@ async def get_stock_analysis(ticker: str):
 @app.get("/api/stocks/{ticker}/history")
 async def get_stock_history(ticker: str, period: str = "6mo"):
     ticker = ticker.upper()
-    if not ticker.endswith(".NS") and not ticker.endswith(".BO"):
-        ticker = f"{ticker}.NS"
+    suffix = ticker[-3:] if ticker.endswith((".NS", ".BO")) else ".NS"
+    ticker = _resolve_alias(ticker) + suffix
     valid_periods = ["1wk", "1mo", "3mo", "6mo", "1y", "2y", "5y"]
     if period not in valid_periods:
         period = "6mo"

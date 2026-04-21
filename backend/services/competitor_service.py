@@ -10,7 +10,7 @@ _comp_cache = TTLCache(maxsize=100, ttl=3600)
 SECTOR_PEERS = {
     'Technology':             ['TCS', 'INFY', 'WIPRO', 'HCLTECH', 'TECHM', 'LTIM', 'MPHASIS'],
     'Financial Services':     ['HDFCBANK', 'ICICIBANK', 'KOTAKBANK', 'AXISBANK', 'SBIN', 'INDUSINDBK', 'BANKBARODA'],
-    'Consumer Cyclical':      ['TITAN', 'BAJAJFINSV', 'MARUTI', 'TATAMOTORS', 'M&M', 'EICHERMOT'],
+    'Consumer Cyclical':      ['TITAN', 'BAJAJFINSV', 'MARUTI', 'TMPV', 'M&M', 'EICHERMOT'],
     'Consumer Defensive':     ['HINDUNILVR', 'ITC', 'NESTLEIND', 'BRITANNIA', 'DABUR', 'MARICO'],
     'Healthcare':             ['SUNPHARMA', 'DRREDDY', 'CIPLA', 'DIVISLAB', 'APOLLOHOSP', 'LUPIN'],
     'Energy':                 ['RELIANCE', 'ONGC', 'BPCL', 'IOC', 'NTPC', 'POWERGRID'],
@@ -25,7 +25,7 @@ INDUSTRY_PEERS = {
     'Software—Application': ['TCS', 'INFY', 'WIPRO', 'HCLTECH', 'TECHM'],
     'Banks—Diversified':    ['HDFCBANK', 'ICICIBANK', 'AXISBANK', 'KOTAKBANK', 'SBIN'],
     'Drug Manufacturers':   ['SUNPHARMA', 'DRREDDY', 'CIPLA', 'LUPIN', 'DIVISLAB'],
-    'Auto Manufacturers':   ['MARUTI', 'TATAMOTORS', 'M&M', 'EICHERMOT', 'BAJAJ-AUTO'],
+    'Auto Manufacturers':   ['MARUTI', 'TMPV', 'M&M', 'EICHERMOT', 'BAJAJ-AUTO'],
     'Steel':                ['TATASTEEL', 'JSWSTEEL', 'SAIL', 'HINDALCO', 'NMDC'],
     'Oil & Gas':            ['RELIANCE', 'ONGC', 'BPCL', 'IOC', 'GAIL'],
     'Telecom':              ['BHARTIARTL', 'IDEA', 'TATACOMM'],

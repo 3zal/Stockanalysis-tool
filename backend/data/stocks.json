@@ -17,7 +17,7 @@
     {"symbol": "SUNPHARMA", "name": "Sun Pharmaceutical Industries Limited", "exchange": "NSE", "sector": "Healthcare"},
     {"symbol": "HCLTECH", "name": "HCL Technologies Limited", "exchange": "NSE", "sector": "Technology"},
     {"symbol": "ASIANPAINT", "name": "Asian Paints Limited", "exchange": "NSE", "sector": "Basic Materials"},
-    {"symbol": "TATAMOTORS", "name": "Tata Motors Limited", "exchange": "NSE", "sector": "Consumer Cyclical"},
+    {"symbol": "TMPV", "name": "Tata Motors Passenger Vehicles Limited", "exchange": "NSE", "sector": "Consumer Cyclical"},
     {"symbol": "NESTLEIND", "name": "Nestle India Limited", "exchange": "NSE", "sector": "Consumer Defensive"},
     {"symbol": "TECHM", "name": "Tech Mahindra Limited", "exchange": "NSE", "sector": "Technology"},
     {"symbol": "ULTRACEMCO", "name": "UltraTech Cement Limited", "exchange": "NSE", "sector": "Basic Materials"},
