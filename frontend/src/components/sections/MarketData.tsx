@@ -67,11 +67,11 @@ export default function MarketData({ quote, fundamentals, technicals }: Props) {
           {fundamentals.forward_pe != null && <StatRow label="Forward P/E" value={fundamentals.forward_pe.toFixed(2)} />}
           {fundamentals.eps != null && <StatRow label="EPS" value={formatCurrency(fundamentals.eps)} />}
           {fundamentals.price_to_book != null && <StatRow label="P/B" value={fundamentals.price_to_book.toFixed(2)} />}
-          {fundamentals.roe != null && <StatRow label="ROE" value={formatPercent(fundamentals.roe * 100)} />}
+          {fundamentals.roe != null && <StatRow label="ROE" value={formatPercent(fundamentals.roe)} />}
           {fundamentals.debt_to_equity != null && <StatRow label="D/E" value={fundamentals.debt_to_equity.toFixed(2)} />}
-          {fundamentals.profit_margin != null && <StatRow label="Profit margin" value={formatPercent(fundamentals.profit_margin * 100)} />}
+          {fundamentals.profit_margin != null && <StatRow label="Profit margin" value={formatPercent(fundamentals.profit_margin)} />}
           {fundamentals.dividend_yield != null && fundamentals.dividend_yield > 0 && (
-            <StatRow label="Div yield" value={formatPercent(fundamentals.dividend_yield * 100)} />
+            <StatRow label="Div yield" value={formatPercent(fundamentals.dividend_yield)} />
           )}
           {fundamentals.beta != null && <StatRow label="Beta" value={fundamentals.beta.toFixed(2)} />}
         </div>

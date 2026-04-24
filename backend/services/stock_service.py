@@ -260,7 +260,7 @@ class StockService:
             info = t.info or {}
             if not info or not info.get('regularMarketPrice') and not info.get('currentPrice'):
                 return {}
-            return {
+            result = {
                 'pe_ratio':          self._sf(info.get('trailingPE')),
                 'forward_pe':        self._sf(info.get('forwardPE')),
                 'peg_ratio':         self._sf(info.get('pegRatio') or info.get('trailingPegRatio')),
@@ -291,6 +291,15 @@ class StockService:
                 'sector':            str(info.get('sector') or ''),
                 'employees':         int(info.get('fullTimeEmployees') or 0),
             }
+
+            # P/B fallback: derive from bookValue if missing
+            if not result['price_to_book']:
+                book = self._sf(info.get('bookValue'))
+                price = self._sf(info.get('regularMarketPrice') or info.get('currentPrice'))
+                if book and price:
+                    result['price_to_book'] = round(price / book, 2)
+
+            return result
         except Exception:
             return {}
 
@@ -747,6 +756,9 @@ class StockService:
             ('^CNXIT',    'NIFTY IT'),
             ('^NSMIDCP',  'NIFTY MIDCAP 50'),
             ('^INDIAVIX', 'INDIA VIX'),
+            ('^BSESN',    'BSE SENSEX'),
+            ('BSE-MIDCAP.BO', 'BSE MIDCAP'),
+            ('BSE-SMLCAP.BO', 'BSE SMALLCAP'),
         ]
         results = []
         for yf_sym, label in INDICES_YF:
@@ -798,7 +810,7 @@ class StockService:
 
             items = data.get('data', [])
             WANT  = ['NIFTY 50', 'NIFTY BANK', 'NIFTY IT',
-                     'NIFTY MIDCAP 50', 'INDIA VIX']
+                     'NIFTY MIDCAP 50', 'INDIA VIX', 'BSE SENSEX']
 
             results = []
             for target in WANT:

@@ -25,10 +25,21 @@ export const useStockStore = create<StockState>((set, get) => ({
 
   fetchStock: async (ticker: string) => {
     set({ loading: true, error: null })
+    const attempt = async () => getStockAnalysis(ticker)
     try {
-      const data = await getStockAnalysis(ticker)
+      const data = await attempt()
       set({ data, loading: false })
     } catch (err: unknown) {
+      const isTimeout = (err as { code?: string })?.code === 'ECONNABORTED' ||
+        (err as Error)?.message?.toLowerCase().includes('timeout')
+      if (isTimeout) {
+        // auto-retry once on timeout (Render cold start)
+        try {
+          const data = await attempt()
+          set({ data, loading: false })
+          return
+        } catch { /* fall through to error */ }
+      }
       const msg =
         (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ||
         (err as Error)?.message ||
