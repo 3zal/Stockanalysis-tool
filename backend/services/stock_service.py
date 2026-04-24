@@ -299,6 +299,27 @@ class StockService:
                 if book and price:
                     result['price_to_book'] = round(price / book, 2)
 
+            # ROE fallback: calculate from financial statements
+            if not result['roe']:
+                try:
+                    fin = t.financials
+                    bs = t.balance_sheet
+                    if fin is not None and not fin.empty and bs is not None and not bs.empty:
+                        ni = None
+                        for k in ['Net Income Common Stockholders', 'Net Income From Continuing Operation Net Minority Interest']:
+                            if k in fin.index:
+                                ni = float(fin.loc[k].iloc[0])
+                                break
+                        eq = None
+                        for k in ['Common Stock Equity', 'Stockholders Equity', 'Total Equity Gross Minority Interest']:
+                            if k in bs.index:
+                                eq = float(bs.loc[k].iloc[0])
+                                break
+                        if ni and eq and eq > 0:
+                            result['roe'] = round(ni / eq * 100, 2)
+                except Exception:
+                    pass
+
             return result
         except Exception:
             return {}

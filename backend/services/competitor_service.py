@@ -118,7 +118,14 @@ class CompetitorService:
         industry_l = (industry or '').lower().strip()
         sector_l = (sector or '').lower().strip()
 
-        # Industry-level: bidirectional substring match
+        # 1. Ticker-based lookup: find the most specific list this stock belongs to
+        for key, peers in INDUSTRY_PEERS.items():
+            if base in peers:
+                filtered = [p for p in peers if p != base]
+                if filtered:
+                    return filtered[:5]
+
+        # 2. Industry-level: bidirectional substring match
         if industry_l:
             for key, peers in INDUSTRY_PEERS.items():
                 key_l = key.lower()
@@ -127,7 +134,7 @@ class CompetitorService:
                     if filtered:
                         return filtered[:5]
 
-        # Sector-level: same bidirectional match
+        # 3. Sector-level: same bidirectional match
         if sector_l:
             for key, peers in SECTOR_PEERS.items():
                 key_l = key.lower()
@@ -174,6 +181,27 @@ class CompetitorService:
                 book = float(info.get('bookValue') or 0)
                 if book and price:
                     pb = round(price / book, 2)
+
+            # ROE fallback: calculate from financial statements
+            if not roe:
+                try:
+                    fin = t.financials
+                    bs = t.balance_sheet
+                    if fin is not None and not fin.empty and bs is not None and not bs.empty:
+                        ni = None
+                        for k in ['Net Income Common Stockholders', 'Net Income From Continuing Operation Net Minority Interest']:
+                            if k in fin.index:
+                                ni = float(fin.loc[k].iloc[0])
+                                break
+                        eq = None
+                        for k in ['Common Stock Equity', 'Stockholders Equity', 'Total Equity Gross Minority Interest']:
+                            if k in bs.index:
+                                eq = float(bs.loc[k].iloc[0])
+                                break
+                        if ni and eq and eq > 0:
+                            roe = round(ni / eq, 4)
+                except Exception:
+                    pass
 
             return {
                 'ticker':         ticker,
