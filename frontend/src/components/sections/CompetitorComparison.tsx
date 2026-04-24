@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion'
 import { ArrowUp, ArrowDown } from 'lucide-react'
-import type { Competitor, StockQuote } from '@/types'
+import type { Competitor, StockQuote, Fundamentals } from '@/types'
 import { formatCurrency, formatPercent, formatMarketCap } from '@/utils/formatters'
 import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
@@ -9,6 +9,7 @@ interface Props {
   competitors: Competitor[]
   currentTicker: string
   quote: StockQuote
+  fundamentals: Fundamentals
 }
 
 function Cell({ value, format, highlight }: { value: number | null | undefined; format: 'pct' | 'num' | 'currency'; highlight?: boolean }) {
@@ -23,7 +24,7 @@ function Cell({ value, format, highlight }: { value: number | null | undefined; 
   )
 }
 
-export default function CompetitorComparison({ competitors, currentTicker, quote }: Props) {
+export default function CompetitorComparison({ competitors, currentTicker, quote, fundamentals }: Props) {
   const navigate = useNavigate()
   if (!competitors.length) return null
 
@@ -31,7 +32,21 @@ export default function CompetitorComparison({ competitors, currentTicker, quote
   const subject = cleanTicker(currentTicker)
 
   const allRows = [
-    { ticker: subject, name: quote.name, price: quote.price, change_pct: quote.change_pct, market_cap: quote.market_cap, pe_ratio: null, price_to_book: null, roe: null, profit_margin: null, revenue_growth: null, beta: null, isSubject: true } as unknown as Competitor & { isSubject: boolean },
+    {
+      ticker: subject,
+      name: quote.name,
+      price: quote.price,
+      change_pct: quote.change_pct,
+      market_cap: quote.market_cap,
+      pe_ratio: fundamentals.pe_ratio ?? null,
+      price_to_book: fundamentals.price_to_book ?? null,
+      // fundamentals.roe is already %, peers expect raw decimal — divide to normalise
+      roe: fundamentals.roe != null ? fundamentals.roe / 100 : null,
+      profit_margin: fundamentals.profit_margin != null ? fundamentals.profit_margin / 100 : null,
+      revenue_growth: null,
+      beta: fundamentals.beta ?? null,
+      isSubject: true,
+    } as unknown as Competitor & { isSubject: boolean },
     ...competitors.map(c => ({ ...c, isSubject: false })),
   ]
 

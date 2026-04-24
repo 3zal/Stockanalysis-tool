@@ -168,7 +168,7 @@ export default function Dashboard({ data }: Props) {
         )}
         {competitors.length > 0 && (
           <div className="md:col-span-2 xl:col-span-3">
-            <CompetitorComparison competitors={competitors} currentTicker={data.ticker} quote={quote} />
+            <CompetitorComparison competitors={competitors} currentTicker={data.ticker} quote={quote} fundamentals={fundamentals} />
           </div>
         )}
       </div>
