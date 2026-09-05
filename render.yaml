@@ -1,3 +1,8 @@
+# DEPRECATED — 5 Sept 2026. investr-info-api no longer runs on Render (the workspace was
+# suspended on 14 Aug 2026 and never resumed). It now runs on Railway (Singapore) from
+# backend/Dockerfile + railway.json, reachable as https://api.investr.info. Runbook: DEPLOY.md
+# here and DEPLOYMENT.md in 3zal/investr-pulse. Kept only as the record of the old setup.
+#
 services:
   - type: web
     name: investr-info-api

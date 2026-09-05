@@ -1,0 +1,13 @@
+# Paths are relative to backend/ (the build context).
+venv
+.venv
+__pycache__
+*.py[cod]
+.env
+.env.*
+# Runtime SQLite cache — recreated at startup, never shipped.
+*.db
+*.db-shm
+*.db-wal
+.DS_Store
+*.md
