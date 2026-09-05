@@ -108,7 +108,12 @@ _rate_last_sweep = 0.0
 
 
 def _client_ip(request: Request) -> str:
-    # Railway's edge proxy sets X-Forwarded-For; the left-most entry is the client.
+    # Railway's edge overwrites X-Real-IP with the client address and rewrites X-Forwarded-For to
+    # "<client>, <edge>" (verified 5 Sept 2026 — forged values never reach the app), so X-Real-IP
+    # is the stable, unspoofable key. Fall back to the left-most forwarded entry, then the socket.
+    real = request.headers.get("x-real-ip", "").strip()
+    if real:
+        return real
     xff = request.headers.get("x-forwarded-for", "")
     if xff:
         return xff.split(",")[0].strip()
