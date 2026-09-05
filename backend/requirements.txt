@@ -8,10 +8,4 @@ vaderSentiment==3.3.2
 feedparser==6.0.11
 python-dotenv==1.0.0
 cachetools==5.3.2
-aiohttp==3.9.1
 pytz>=2023.3
-fuzzywuzzy==0.18.0
-python-Levenshtein==0.23.0
-SQLAlchemy==2.0.23
-aiosqlite==0.19.0
-httpx==0.25.2

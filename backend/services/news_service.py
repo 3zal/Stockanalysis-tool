@@ -77,7 +77,8 @@ class NewsService:
         try:
             sess = get_session()
             resp = sess.get(
-                f'https://www.nseindia.com/api/corporate-announcements?index=equities&symbol={base_ticker}',
+                'https://www.nseindia.com/api/corporate-announcements',
+                params={'index': 'equities', 'symbol': base_ticker},
                 timeout=10,
             )
             if resp.status_code == 200:

@@ -5,8 +5,16 @@ from pydantic import BaseModel
 from typing import Any, Optional
 import asyncio
 import json
+import logging
 import math
 import os
+import re
+import threading
+import time
+from collections import deque
+
+from fastapi import Request
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from database import Database
 from services.stock_service import StockService
@@ -49,10 +57,16 @@ class SafeJSONResponse(JSONResponse):
         ).encode("utf-8")
 
 
+logger = logging.getLogger("investr")
+
 app = FastAPI(
     title="investr.info API",
     version="1.0.0",
     default_response_class=SafeJSONResponse,
+    # Public read-only API; the interactive docs only advertised the surface to scanners.
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
 
 _default_origins = [
@@ -61,11 +75,14 @@ _default_origins = [
     "http://127.0.0.1:5173",
 ]
 _env_origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "").split(",") if o.strip()]
+# Production sets CORS_ORIGINS; the localhost defaults are for a bare local run only.
+_allowed_origins = _env_origins if _env_origins else _default_origins
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=_default_origins + _env_origins,
-    allow_credentials=True,
+    allow_origins=_allowed_origins,
+    # No cookies or sessions anywhere in this API, so nothing needs credentialed CORS.
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -77,6 +94,66 @@ scoring_svc = ScoringService()
 competitor_svc = CompetitorService()
 analyst_svc = AnalystService()
 macro_svc = MacroService()
+
+
+# ── Abuse limits ──────────────────────────────────────────────────────────────
+# Every /api/stocks/* call can cost seconds of upstream fetching (Yahoo → Twelve Data → NSE
+# fallback chains). Without a limit a single client could pin the worker pools for everyone.
+# Sliding one-minute window per client IP; in-process, which is enough for one replica.
+RATE_LIMIT_PER_MIN = int(os.getenv("RATE_LIMIT_PER_MIN", "240"))
+_RATE_WINDOW_S = 60
+_rate_hits: dict = {}
+_rate_lock = threading.Lock()
+_rate_last_sweep = 0.0
+
+
+def _client_ip(request: Request) -> str:
+    # Railway's edge proxy sets X-Forwarded-For; the left-most entry is the client.
+    xff = request.headers.get("x-forwarded-for", "")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.url.path.startswith("/api/stocks"):
+            now = time.time()
+            ip = _client_ip(request)
+            with _rate_lock:
+                global _rate_last_sweep
+                if now - _rate_last_sweep > _RATE_WINDOW_S:
+                    # Drop idle clients so the table cannot grow without bound.
+                    for k in [k for k, q in _rate_hits.items() if not q or now - q[-1] > _RATE_WINDOW_S]:
+                        _rate_hits.pop(k, None)
+                    _rate_last_sweep = now
+                q = _rate_hits.setdefault(ip, deque())
+                while q and now - q[0] > _RATE_WINDOW_S:
+                    q.popleft()
+                if len(q) >= RATE_LIMIT_PER_MIN:
+                    return SafeJSONResponse(
+                        {"detail": "Too many requests. Try again in a minute."},
+                        status_code=429,
+                        headers={"Retry-After": "60"},
+                    )
+                q.append(now)
+        return await call_next(request)
+
+
+app.add_middleware(RateLimitMiddleware)
+
+# NSE/BSE symbols: letters, digits, '&' (M&M), '-' (BAJAJ-AUTO), optional exchange suffix.
+_TICKER_RE = re.compile(r"^[A-Z0-9&\-]{1,20}(\.NS|\.BO)?$")
+
+
+def _clean_ticker(raw: str) -> str:
+    """Normalise a user-supplied ticker and refuse anything that is not shaped like one,
+    before it can reach an upstream fetch or the database."""
+    ticker = raw.upper().strip()
+    if not _TICKER_RE.match(ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker symbol.")
+    suffix = ticker[-3:] if ticker.endswith((".NS", ".BO")) else ".NS"
+    return _resolve_alias(ticker) + suffix
 
 
 @app.on_event("startup")
@@ -95,7 +172,7 @@ async def health():
 
 
 @app.get("/api/stocks/search")
-async def search_stocks(q: str = Query(..., min_length=1)):
+async def search_stocks(q: str = Query(..., min_length=1, max_length=64)):
     """Search stocks by name or ticker symbol"""
     results = await stock_svc.search_stocks(q)
     return {"results": results}
@@ -104,9 +181,7 @@ async def search_stocks(q: str = Query(..., min_length=1)):
 @app.get("/api/stocks/{ticker}")
 async def get_stock_analysis(ticker: str):
     """Get comprehensive stock analysis"""
-    ticker = ticker.upper().strip()
-    suffix = ticker[-3:] if ticker.endswith((".NS", ".BO")) else ".NS"
-    ticker = _resolve_alias(ticker) + suffix
+    ticker = _clean_ticker(ticker)
 
     try:
         # Fetch quote first to validate ticker
@@ -183,24 +258,21 @@ async def get_stock_analysis(ticker: str):
 
     except HTTPException:
         raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
+    except Exception:
+        logger.exception("analysis failed for %s", ticker)
+        raise HTTPException(status_code=500, detail="Analysis failed. Please try again.")
 
 
 @app.get("/api/stocks/{ticker}/yearly-performance")
 async def get_yearly_performance(ticker: str):
-    ticker = ticker.upper().strip()
-    suffix = ticker[-3:] if ticker.endswith((".NS", ".BO")) else ".NS"
-    ticker = _resolve_alias(ticker) + suffix
+    ticker = _clean_ticker(ticker)
     data = await stock_svc.get_yearly_performance(ticker)
     return {"yearly_performance": data}
 
 
 @app.get("/api/stocks/{ticker}/history")
 async def get_stock_history(ticker: str, period: str = "6mo"):
-    ticker = ticker.upper()
-    suffix = ticker[-3:] if ticker.endswith((".NS", ".BO")) else ".NS"
-    ticker = _resolve_alias(ticker) + suffix
+    ticker = _clean_ticker(ticker)
     valid_periods = ["1wk", "1mo", "3mo", "6mo", "1y", "2y", "5y"]
     if period not in valid_periods:
         period = "6mo"
@@ -223,20 +295,24 @@ async def get_watchlist():
 
 
 class WatchlistItem(BaseModel):
-    ticker: str
-    name: str
+    ticker: str = ""
+    name: str = ""
+
+
+# The watchlist table has no user column — it was one global list shared by every visitor, and
+# these endpoints let anyone write to it. investr.info's own backend owns per-account watchlists
+# now, so the writes are retired rather than hardened. GET stays for old clients (read-only).
+_GONE = {"detail": "This endpoint has been retired. Watchlists live in the investr.info app backend."}
 
 
 @app.post("/api/watchlist")
 async def add_to_watchlist(item: WatchlistItem):
-    db.add_to_watchlist(item.ticker.upper(), item.name)
-    return {"success": True, "message": f"{item.ticker} added to watchlist"}
+    return SafeJSONResponse(_GONE, status_code=410)
 
 
 @app.delete("/api/watchlist/{ticker}")
 async def remove_from_watchlist(ticker: str):
-    db.remove_from_watchlist(ticker.upper())
-    return {"success": True, "message": f"{ticker} removed from watchlist"}
+    return SafeJSONResponse(_GONE, status_code=410)
 
 
 # Search history endpoints
@@ -248,5 +324,4 @@ async def get_search_history():
 
 @app.delete("/api/search-history")
 async def clear_search_history():
-    db.clear_search_history()
-    return {"success": True}
+    return SafeJSONResponse(_GONE, status_code=410)

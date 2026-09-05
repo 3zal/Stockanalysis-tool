@@ -666,10 +666,14 @@ class StockService:
             logger.exception(f"yearly: {ticker} failed: {e}")
             return []
 
-    TWELVEDATA_KEY = os.getenv('TWELVEDATA_KEY', '3a0890ff4a5b47079d3ccab4a68d47fd')
+    # Set TWELVEDATA_KEY in the environment. No default on purpose: the previous hard-coded key
+    # sat in a public repo and is treated as burned. Unset = the Twelve Data fallback is skipped.
+    TWELVEDATA_KEY = os.getenv('TWELVEDATA_KEY', '').strip()
 
     def _fetch_quote_twelvedata(self, ticker: str, symbol: str, exchange: str) -> Optional[dict]:
         """Fetch quote from Twelve Data API."""
+        if not self.TWELVEDATA_KEY:
+            return None
         try:
             tw_exchange = 'NSE' if exchange == 'NSE' else 'BSE'
             resp = requests.get(
@@ -722,6 +726,8 @@ class StockService:
 
     def _history_twelvedata(self, symbol: str, days: int) -> list:
         """Fetch daily OHLCV from Twelve Data API."""
+        if not self.TWELVEDATA_KEY:
+            return []
         try:
             outputsize = min(days, 5000)
             resp = requests.get(
