@@ -2,8 +2,8 @@
 
 This service is the Investr Score + search + full-analysis backend for investr.info. Since
 5 Sept 2026 it runs on **Railway** (region Singapore) as a Docker container built from
-[`backend/Dockerfile`](backend/Dockerfile), with [`railway.json`](railway.json) at the repo root
-holding the health check and restart policy. It used to be a Render web service (`render.yaml`,
+[`backend/Dockerfile`](backend/Dockerfile). Health check (`/health`) and restart policy are
+dashboard settings — Railway deprecated its `railway.json` config-as-code in Aug 2026. It used to be a Render web service (`render.yaml`,
 now deprecated and kept only as a record).
 
 The **full runbook** — DNS, both services, env vars, verification, the web upload, the App Store
