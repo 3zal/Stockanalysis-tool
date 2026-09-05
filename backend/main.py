@@ -162,8 +162,15 @@ async def startup():
 
 
 @app.get("/health")
-async def root_health():
-    return {"status": "ok", "build": "yearly-v2"}
+async def root_health(request: Request):
+    body = {"status": "ok", "build": "yearly-v2"}
+    # Operator aid: with DEBUG_FORWARDING=1 the caller sees the forwarding headers the edge
+    # delivered for their own request (only their own IPs), to tune proxy trust settings.
+    if os.getenv("DEBUG_FORWARDING") == "1":
+        body["forwarding"] = {k: v for k, v in request.headers.items()
+                              if k.startswith("x-forwarded") or k in ("x-real-ip", "x-envoy-external-address", "cf-connecting-ip", "true-client-ip")}
+        body["client"] = request.client.host if request.client else None
+    return body
 
 
 @app.get("/api/health")
